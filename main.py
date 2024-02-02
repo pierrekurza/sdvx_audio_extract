@@ -1,7 +1,6 @@
 import glob
 import os
 import pprint
-
 import requests
 import re
 import subprocess
