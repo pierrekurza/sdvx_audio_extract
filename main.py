@@ -1,10 +1,14 @@
 import glob
 import os
+import pprint
+
+import requests
 import re
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
-from pathvalidate import sanitize_filename
+
+URL_GET_MUSIC_INFOS = "https://fairyjoke.net/api/games/sdvx/musics/{0}"
 
 
 # Get all the folder inside the provided file path
@@ -14,6 +18,11 @@ def get_folders_name(sound_path: str):
     for dir_name in list(sub_folders):
         sub_folders.extend(get_folders_name(dir_name))
     return sub_folders
+
+
+def get_music_infos(music_id: int):
+    response_api = requests.get(URL_GET_MUSIC_INFOS.format(music_id))
+    pprint.pprint((response_api.json()), sort_dicts=False)
 
 
 # Reads the current folder name
@@ -103,7 +112,7 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
         if not re.search("(_pre.s3v$)", music):
             music_path = music
     # Launch extract
-    output_path_final = output_path + "\\" + str(folder_number) + ' - ' + sanitize_filename(music_name) + ".mp3"
+    output_path_final = output_path + "\\" + str(folder_number) + ' - ' + music_name + ".mp3"
     command_line = '''C:\\TOOLS\\ffmpeg.exe -i "%s" -i "%s" -map 0:0 -map 1:0 -c copy -acodec libmp3lame -id3v2_version 3 -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" -metadata title="%s" -metadata artist="%s" -metadata album_artist="%s" -metadata album="%s" -q:a 0 "%s"'''
     process = subprocess.Popen(command_line % (
         music_path,
@@ -121,23 +130,24 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
 
 
 def main():
-    args = sys.argv[1:]
-    if len(args) == 4 and args[0] == '-audiopath' and args[2] == '-musicxmlpath':
-        # specify the path for the output folder
-        output_folder = "G:\\DEV_SDVX"
-        # rename SDVX_SONG to whatever you like
-        output_folder_name = "\\" + "SDVX_SONGS_2"
-        final_output_folder_name = output_folder + output_folder_name
-        if not os.path.exists(final_output_folder_name):
-            os.makedirs(final_output_folder_name)
-        audio_path = args[1]
-        xml_path = args[3]
-        folders = get_folders_name(audio_path)
-        for folder in folders:
-            folder_number = get_folder_number(folder)
-            music_name, artist_name, album_artist, album_name = get_music_infos_from_xml(folder_number, xml_path)
-            convert_audio_and_move_file(folder, folder_number, final_output_folder_name, music_name, artist_name,
-                                        album_artist, album_name)
+    get_music_infos(1773)
+    # args = sys.argv[1:]
+    # if len(args) == 4 and args[0] == '-audiopath' and args[2] == '-musicxmlpath':
+    #     # specify the path for the output folder
+    #     output_folder = "G:\\DEV_SDVX"
+    #     # rename SDVX_SONG to whatever you like
+    #     output_folder_name = "\\" + "SDVX_SONGS_2"
+    #     final_output_folder_name = output_folder + output_folder_name
+    #     if not os.path.exists(final_output_folder_name):
+    #         os.makedirs(final_output_folder_name)
+    #     audio_path = args[1]
+    #     xml_path = args[3]
+    #     folders = get_folders_name(audio_path)
+    #     for folder in folders:
+    #         folder_number = get_folder_number(folder)
+    #         music_name, artist_name, album_artist, album_name = get_music_infos_from_xml(folder_number, xml_path)
+    #         convert_audio_and_move_file(folder, folder_number, final_output_folder_name, music_name, artist_name,
+    #                                     album_artist, album_name)
 
 
 if __name__ == '__main__':
