@@ -1,22 +1,13 @@
 import glob
 import os
+import pathlib
+
 import requests
 import re
 import subprocess
 from PIL import Image
 
-# 0 : Music ID
 URL_GET_MUSIC_INFOS = "https://fairyjoke.net/api/games/sdvx/musics/{0}"
-
-# 0 : Music ID
-# 1 : Difficulty name
-URL_GET_MUSIC_COVER = "https://fairyjoke.net/api/games/sdvx/musics/{0}/{1}.png"
-
-URL_GET_DEFAULT_COVER = "https://fairyjoke.net/api/games/sdvx/assets/jacket/version.png"
-
-DIFF_LIST = ["NOVICE", "ADVANCED", "EXHAUST", "MAXIMUM", "INFINITE", "GRAVITY", "HEAVENLY", "VIVID", "EXCEED"]
-
-SDVX_NAME = "SOUND VOLTEX"
 
 GAME_VERSIONS = {
     1: "SOUND VOLTEX BOOTH",
@@ -27,19 +18,11 @@ GAME_VERSIONS = {
     6: "SOUND VOLTEX VI EXCEED GEAR"
 }
 
+DIFF_LIST = ["NOVICE", "ADVANCED", "EXHAUST", "MAXIMUM", "INFINITE", "GRAVITY", "HEAVENLY", "VIVID", "EXCEED"]
+URL_GET_MUSIC_COVER = "https://fairyjoke.net/api/games/sdvx/musics/{0}/{1}.png"
+URL_GET_DEFAULT_COVER = "https://fairyjoke.net/api/games/sdvx/assets/jacket/version.png"
 
-# Get all the folder inside the provided file path
-# Returns the list of all folders names inside the provided path
-def get_folders_name(sound_path: str):
-    sub_folders = [f.path for f in os.scandir(sound_path) if f.is_dir()]
-    for dir_name in list(sub_folders):
-        sub_folders.extend(get_folders_name(dir_name))
-    return sub_folders
-
-
-# Reads the current folder name
-# Returns the number associated with the current folder
-def get_folder_number(folder_name: str) -> int:
+def get_folder_number(folder_name) -> int:
     folder_number = re.search(r"[^\\]+(?=\\$|$)", folder_name)
     if folder_number:
         found_number_in_string = re.search(r'^[^_]+(?=_)', folder_number.group())
@@ -71,7 +54,15 @@ def get_music_infos_from_api(music_id: int):
     print(music_name, artist_name, album_artist, album_name, max_diff, simple_name)
 
 
-def get_music_cover_from_api(music_id: int, diff_name: str, extract_folder: str) -> str:
+def clean_covers_folders_and_delete(covers_path: str):
+    covers_dir = glob.glob(covers_path + "\\covers" + "\\*")
+    for i in covers_dir:
+        os.remove(i)
+    if os.path.isdir(os.path.join(covers_path, "covers")):
+        os.rmdir(covers_path + "\\covers")
+
+
+def get_music_cover_from_api(music_id: int, diff_name: str, extract_folder: str):
     if diff_name.upper() in DIFF_LIST:
         image = ""
         response_api = requests.get(URL_GET_MUSIC_COVER.format(music_id, diff_name), stream=True)
@@ -81,14 +72,15 @@ def get_music_cover_from_api(music_id: int, diff_name: str, extract_folder: str)
         else:
             image = Image.open(response_api.raw)
 
-        if os.path.exists(extract_folder):
-            covers_path = extract_folder + "\\covers"
-            os.mkdir(covers_path)
-            os.chdir(covers_path)
-            final_cover_path = f"{covers_path}" + "\\{0}.png".format(str(music_id))
+        if not os.path.isdir(os.path.join(extract_folder, "covers")):
+            pathlib.Path(os.path.join(extract_folder, "covers")).mkdir(parents=True, exist_ok=False)
+            os.chdir(os.path.join(extract_folder, "covers"))
+            os.chdir(os.path.join(extract_folder, "covers"))
+            final_cover_path = f"{os.path.join(extract_folder, "covers")}" + "\\{0}.png".format(str(music_id))
             if not os.path.isfile(final_cover_path):
                 image.save(f"{final_cover_path}")
             return os.getcwd() + "\\{0}.png".format(str(music_id))
+        return os.path.join(extract_folder, "covers") + "\\{0}.png".format(str(music_id))
     else:
         raise NameError("Cover not found.")
 
@@ -109,7 +101,7 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
     # Launch extract
     output_path_final = os.path.join(output_path, album_name, str(folder_number) + f"_{ascii_name}.mp3")
 
-    # Create folders for each game
+    #Code pour créer les dossiers finaux de jeux
     for name in GAME_VERSIONS.values():
         if not os.path.exists(os.path.join(output_path, name)):
             os.makedirs(os.path.join(output_path, name))
@@ -132,41 +124,12 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
         return False
 
 
-def introduction_cli():
-    print("SDVX Songs Extraction Tool")
-    while True:
-        game_folder = input("Please provide the SDVX game path > ")
-        if os.path.exists(game_folder) and "soundvoltex.dll" in os.listdir(game_folder + "\\modules"):
-            print("Continue")
-            break
-        else:
-            print("soundvoltex.dll is not present...")
-    while True:
-        extract_folder = input("Please provide the path where musics have to be extracted (the folder will be created "
-                               "if it doesn't exist) > ")
-        break
-    return game_folder, extract_folder
-
-
-def clean_covers_folders_and_delete(covers_path: str):
-    covers_dir = glob.glob(covers_path + "\\covers" + "\\*")
-    for i in covers_dir:
-        os.remove(i)
-    if os.path.isdir(os.path.join(covers_path, "covers")):
-        os.rmdir(covers_path + "\\covers")
-
-
-def main():
-    # game_folder, extract_folder = introduction_cli()
-    clean_covers_folders_and_delete(extract_folder)
-    # music_folder = os.path.join(game_folder, "data", "music")
-    # folders = get_folders_name(music_folder)
-    # for folder in folders:
-    #     folder_number = get_folder_number(folder)
-    #music_name, artist_name, album_artist, album_name, max_diff, simple_name = get_music_infos_from_api(1)
-    get_music_infos_from_api(1)
-    # convert_audio_and_move_file(music_name, folder_number, extract_folder, music_name, artist_name, album_artist,
-    #                             album_name, simple_name, max_diff)
-
 if __name__ == '__main__':
-    main()
+    # number_song = get_folder_number("0025_rebellious_stage_dios")
+    # get_music_infos_from_api(number_song)
+    # get_music_cover_from_api(number_song, "INFINITE", "E:\\Torrents\\Musique")
+    convert_audio_and_move_file("C:\\BEMANI\\SDVX\\SDVX EXCEED GEAR (DATA)\\2023_09_12\\data\\music\\0025_rebellious_stage_dios",
+                                25, "E:\\Torrents\\Musique", "Rebellious stage Dios", "シグナルP",
+                                "Various Artists", "SOUND VOLTEX BOOTH GST", "rebellious_stage_dios",
+                                "INFINITE")
+
