@@ -138,7 +138,7 @@ def introduction_cli():
     while True:
         game_folder = input("Please provide the SDVX game path > ")
         if os.path.exists(game_folder) and "soundvoltex.dll" in os.listdir(game_folder + "\\modules"):
-            print("Continue")
+            print("Ok, we can continue...")
             break
         else:
             print("soundvoltex.dll is not present...")
