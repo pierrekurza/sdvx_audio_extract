@@ -3,6 +3,8 @@ import os
 import requests
 import re
 import subprocess
+import pathlib
+import ffmpeg
 from PIL import Image
 
 # 0 : Music ID
@@ -68,10 +70,10 @@ def get_music_infos_from_api(music_id: int):
     # Values can be : "MAXIMUM", "INFINITE", "GRAVITY", "HEAVENLY", "VIVID", "EXCEED"
     elif len(data["difficulties"]) == 4:
         max_diff = data["difficulties"][3]['diff']
-    print(music_name, artist_name, album_artist, album_name, max_diff, simple_name)
+    return music_name, artist_name, album_artist, album_name, max_diff, simple_name
 
 
-def get_music_cover_from_api(music_id: int, diff_name: str, extract_folder: str) -> str:
+def get_music_cover_from_api(music_id: int, diff_name: str, extract_folder: str):
     if diff_name.upper() in DIFF_LIST:
         image = ""
         response_api = requests.get(URL_GET_MUSIC_COVER.format(music_id, diff_name), stream=True)
@@ -80,15 +82,17 @@ def get_music_cover_from_api(music_id: int, diff_name: str, extract_folder: str)
             image = Image.open(default_sdvx_cover_response.raw)
         else:
             image = Image.open(response_api.raw)
-
-        if os.path.exists(extract_folder):
-            covers_path = extract_folder + "\\covers"
-            os.mkdir(covers_path)
-            os.chdir(covers_path)
-            final_cover_path = f"{covers_path}" + "\\{0}.png".format(str(music_id))
-            if not os.path.isfile(final_cover_path):
+        cover_path = os.path.join(extract_folder, "covers")
+        final_cover_path = os.path.join(cover_path + "\\{0}.png".format(music_id))
+        if not os.path.isdir(os.path.join(extract_folder, "covers")):
+            os.makedirs(os.path.join(extract_folder, "covers"))
+            os.chdir(os.path.join(extract_folder, "covers"))
+            if not os.path.exists(final_cover_path):
                 image.save(f"{final_cover_path}")
-            return os.getcwd() + "\\{0}.png".format(str(music_id))
+                return os.getcwd() + "\\{0}.png".format(str(music_id))
+        else:
+            image.save(final_cover_path)
+            return os.path.join(extract_folder, "covers") + "\\{0}.png".format(str(music_id))
     else:
         raise NameError("Cover not found.")
 
@@ -113,6 +117,9 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
     for name in GAME_VERSIONS.values():
         if not os.path.exists(os.path.join(output_path, name)):
             os.makedirs(os.path.join(output_path, name))
+
+    ffmpeg.input(music_path)
+    
 
     command_line = '''C:\\TOOLS\\ffmpeg.exe -i "%s" -i "%s" -map 0:0 -map 1:0 -ab 320k -c copy -acodec libmp3lame 
     -id3v2_version 3 -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" -metadata title="%s" 
@@ -157,16 +164,25 @@ def clean_covers_folders_and_delete(covers_path: str):
 
 
 def main():
-    # game_folder, extract_folder = introduction_cli()
+    folder_number: int
+    game_folder, extract_folder = introduction_cli()
     clean_covers_folders_and_delete(extract_folder)
-    # music_folder = os.path.join(game_folder, "data", "music")
-    # folders = get_folders_name(music_folder)
-    # for folder in folders:
-    #     folder_number = get_folder_number(folder)
-    #music_name, artist_name, album_artist, album_name, max_diff, simple_name = get_music_infos_from_api(1)
-    get_music_infos_from_api(1)
-    # convert_audio_and_move_file(music_name, folder_number, extract_folder, music_name, artist_name, album_artist,
-    #                             album_name, simple_name, max_diff)
+    music_folder = os.path.join(game_folder, "data", "music")
+    folders = get_folders_name(music_folder)
+    for folder in folders:
+        folder_number = get_folder_number(folder)
+        music_name, artist_name, album_artist, album_name, max_diff, simple_name = (
+            get_music_infos_from_api(folder_number))
+        convert_audio_and_move_file(folder,
+                                    folder_number,
+                                    extract_folder,
+                                    music_name,
+                                    artist_name,
+                                    album_artist,
+                                    album_name,
+                                    simple_name,
+                                    max_diff)
+
 
 if __name__ == '__main__':
     main()

@@ -22,6 +22,7 @@ DIFF_LIST = ["NOVICE", "ADVANCED", "EXHAUST", "MAXIMUM", "INFINITE", "GRAVITY", 
 URL_GET_MUSIC_COVER = "https://fairyjoke.net/api/games/sdvx/musics/{0}/{1}.png"
 URL_GET_DEFAULT_COVER = "https://fairyjoke.net/api/games/sdvx/assets/jacket/version.png"
 
+
 def get_folder_number(folder_name) -> int:
     folder_number = re.search(r"[^\\]+(?=\\$|$)", folder_name)
     if folder_number:
