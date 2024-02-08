@@ -3,8 +3,7 @@ import os
 import requests
 import re
 import subprocess
-import pathlib
-import ffmpeg
+import static_ffmpeg
 from PIL import Image
 
 # 0 : Music ID
@@ -61,7 +60,7 @@ def get_music_infos_from_api(music_id: int):
     music_name = data["title"]
     artist_name = data["artist"]
     album_artist = "Various Artists"
-    album_name = GAME_VERSIONS[data["version"]] + " GST"
+    album_name = GAME_VERSIONS[data["version"]]
     max_diff = ""
     simple_name = data["ascii"]
     # Value can be : "EXHAUST"
@@ -108,31 +107,26 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
 
     cover_path = get_music_cover_from_api(folder_number, diff_name, output_path)
     for music in list_of_files:
-        if not re.search("(_pre.s3v$)", music):
+        if not re.search("(_pre.s3v$)", music) and not re.search("(_fx.s3v$)", music):
             music_path = music
     # Launch extract
     output_path_final = os.path.join(output_path, album_name, str(folder_number) + f"_{ascii_name}.mp3")
-
     # Create folders for each game
     for name in GAME_VERSIONS.values():
         if not os.path.exists(os.path.join(output_path, name)):
             os.makedirs(os.path.join(output_path, name))
 
-    ffmpeg.input(music_path)
-    
-
-    command_line = '''C:\\TOOLS\\ffmpeg.exe -i "%s" -i "%s" -map 0:0 -map 1:0 -ab 320k -c copy -acodec libmp3lame 
-    -id3v2_version 3 -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" -metadata title="%s" 
-    -metadata artist="%s" -metadata album_artist="%s" -metadata album="%s" -q:a 0 "%s"'''
+    command_line = '''static_ffmpeg -y -i "%s" -i "%s" -map 0:0 -map 1:0 -ab 320k -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" -metadata title="%s" -metadata artist="%s" -metadata album_artist="%s" -metadata album="%s" "%s"'''
     process = subprocess.Popen(command_line % (
         music_path,
         cover_path,
         music_name,
         artist_name,
         album_artist,
-        album_name + " GST",
+        f"{album_name} GST",
         output_path_final
     ), shell=True)
+    print(process.args)
     if process:
         return True
     else:
@@ -169,10 +163,10 @@ def main():
     clean_covers_folders_and_delete(extract_folder)
     music_folder = os.path.join(game_folder, "data", "music")
     folders = get_folders_name(music_folder)
+    static_ffmpeg.add_paths()
     for folder in folders:
         folder_number = get_folder_number(folder)
-        music_name, artist_name, album_artist, album_name, max_diff, simple_name = (
-            get_music_infos_from_api(folder_number))
+        music_name, artist_name, album_artist, album_name, max_diff, simple_name = get_music_infos_from_api(folder_number)
         convert_audio_and_move_file(folder,
                                     folder_number,
                                     extract_folder,
