@@ -71,6 +71,9 @@ def get_music_info_from_api(music_id: int):
     # Values can be : "MAXIMUM", "INFINITE", "GRAVITY", "HEAVENLY", "VIVID", "EXCEED"
     elif len(data["difficulties"]) == 4:
         max_diff = data["difficulties"][3]['diff']
+    # Managing 1 diff songs, april fool or other.
+    elif len(data["difficulties"]) == 1:
+        max_diff = data["difficulties"][0]['diff']
     return music_name, artist_name, album_artist, album_name, max_diff, simple_name
 
 
@@ -117,9 +120,7 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
         if not os.path.exists(os.path.join(output_path, name)):
             os.makedirs(os.path.join(output_path, name))
 
-    command_line = '''static_ffmpeg -y -i "%s" -i "%s" -map 0:0 -map 1:0 -ab 320k -metadata:s:v title="Album cover" 
-    -metadata:s:v comment="Cover (front)" -metadata title="%s" -metadata artist="%s" -metadata album_artist="%s" 
-    -metadata album="%s" "%s"'''
+    command_line = '''static_ffmpeg -y -i "%s" -i "%s" -map 0:0 -map 1:0 -ab 320k -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" -metadata title="%s" -metadata artist="%s" -metadata album_artist="%s" -metadata album="%s" "%s"'''
     process = subprocess.Popen(command_line % (
         music_path,
         cover_path,
@@ -157,7 +158,7 @@ def clean_covers_folders_and_delete(covers_path: str):
     for i in covers_dir:
         os.remove(i)
     if os.path.isdir(os.path.join(covers_path, "covers")):
-        os.rmdir(covers_path + "\\covers")
+        os.rmdir(os.path.join(covers_path, "covers"))
 
 
 def main():
