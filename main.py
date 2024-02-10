@@ -4,7 +4,6 @@ import requests
 import re
 import subprocess
 import static_ffmpeg
-import shlex
 from PIL import Image
 
 API_BASE_URL = "https://fairyjoke.net/api/games/sdvx/"
