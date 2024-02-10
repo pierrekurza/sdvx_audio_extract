@@ -176,6 +176,7 @@ def main():
                                         album_name, simple_name, max_diff)
         else:
             continue
+    clean_covers_folders_and_delete(extract_folder)
 
 
 if __name__ == '__main__':
