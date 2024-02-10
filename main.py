@@ -133,7 +133,6 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
         f"{album_name} GST",
         output_path_final
     ), shell=True)
-    print(process.args)
     return process is not None
 
 
@@ -172,7 +171,6 @@ def main():
         folder_number = get_folder_number(folder)
         music_name, artist_name, album_artist, album_name, max_diff, simple_name = (
             get_music_info_from_api(folder_number))
-        print(music_name, artist_name, album_artist, album_name, max_diff, simple_name)
         if music_name is not None:
             convert_audio_and_move_file(folder, folder_number, extract_folder, music_name,artist_name,album_artist,
                                         album_name, simple_name, max_diff)
