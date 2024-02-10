@@ -4,6 +4,7 @@ import requests
 import re
 import subprocess
 import static_ffmpeg
+import shlex
 from PIL import Image
 
 API_BASE_URL = "https://fairyjoke.net/api/games/sdvx/"
@@ -56,8 +57,8 @@ def get_folder_number(folder_name: str) -> int:
 
 def get_music_info_from_api(music_id: int):
     response_api = requests.get(URL_GET_MUSIC_INFO.format(music_id))
-    if response_api.status_code == 404:
-        return
+    if response_api.status_code == 404 or response_api.status_code == 500:
+        return None, None, None, None, None, None
     data = response_api.json()
     music_name = data["title"]
     artist_name = data["artist"]
@@ -104,9 +105,9 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
                                 artist_name: str, album_artist: str, album_name: str, ascii_name: str, diff_name: str):
     list_of_files = glob.glob(folder_path + '\\*.s3v', recursive=True)
     if len(list_of_files) == 0:
-        return
+        return False
     if not music_name.strip():
-        return
+        return False
     music_path: str = ""
 
     cover_path = get_music_cover_from_api(folder_number, diff_name, output_path)
@@ -120,7 +121,10 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
         if not os.path.exists(os.path.join(output_path, name)):
             os.makedirs(os.path.join(output_path, name))
 
-    command_line = '''static_ffmpeg -y -i "%s" -i "%s" -map 0:0 -map 1:0 -ab 320k -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" -metadata title="%s" -metadata artist="%s" -metadata album_artist="%s" -metadata album="%s" "%s"'''
+    if '"' in artist_name:
+        artist_name = artist_name.replace('"', '""')
+
+    command_line = '''static_ffmpeg -y -i "%s" -i "%s" -map 0:0 -map 1:0 -ab 320k -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" -metadata title="%s" -metadata "artist=%s" -metadata album_artist="%s" -metadata album="%s" "%s"'''
     process = subprocess.Popen(command_line % (
         music_path,
         cover_path,
@@ -131,10 +135,7 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
         output_path_final
     ), shell=True)
     print(process.args)
-    if process:
-        return True
-    else:
-        return False
+    return process is not None
 
 
 def introduction_cli():
@@ -172,15 +173,12 @@ def main():
         folder_number = get_folder_number(folder)
         music_name, artist_name, album_artist, album_name, max_diff, simple_name = (
             get_music_info_from_api(folder_number))
-        convert_audio_and_move_file(folder,
-                                    folder_number,
-                                    extract_folder,
-                                    music_name,
-                                    artist_name,
-                                    album_artist,
-                                    album_name,
-                                    simple_name,
-                                    max_diff)
+        print(music_name, artist_name, album_artist, album_name, max_diff, simple_name)
+        if music_name is not None:
+            convert_audio_and_move_file(folder, folder_number, extract_folder, music_name,artist_name,album_artist,
+                                        album_name, simple_name, max_diff)
+        else:
+            continue
 
 
 if __name__ == '__main__':
