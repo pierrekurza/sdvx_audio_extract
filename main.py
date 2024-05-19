@@ -92,9 +92,11 @@ def get_music_cover_from_api(music_id: int, diff_name: str, extract_folder: str)
             os.chdir(os.path.join(extract_folder, "covers"))
             if not os.path.exists(final_cover_path):
                 image.save(f"{final_cover_path}")
+                image.close()
                 return os.getcwd() + "\\{0}.png".format(str(music_id))
         else:
             image.save(final_cover_path)
+            image.close()
             return os.path.join(extract_folder, "covers") + "\\{0}.png".format(str(music_id))
     else:
         raise NameError("Cover not found.")
