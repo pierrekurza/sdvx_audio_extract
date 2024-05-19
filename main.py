@@ -140,7 +140,8 @@ def introduction_cli():
     print("SDVX Songs Extraction Tool")
     while True:
         game_folder = input("Please provide the SDVX game path > ")
-        if os.path.exists(game_folder) and "soundvoltex.dll" in os.listdir(game_folder + "\\modules"):
+        if (os.path.exists(game_folder) and "soundvoltex.dll" in os.listdir(game_folder + "\\modules")
+                or "soundvoltex.dll" in os.listdir(game_folder)):
             print("Ok, we can continue...")
             break
         else:
