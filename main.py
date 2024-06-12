@@ -13,7 +13,7 @@ URL_GET_MUSIC_INFO = API_BASE_URL + "musics/{0}"
 
 # 0 : Music ID
 # 1 : Difficulty name
-URL_GET_MUSIC_COVER = API_BASE_URL + "musics/{0}/{1}.png"
+URL_GET_MUSIC_COVER = API_BASE_URL + "musics/{0}/{1}.png?fallback=game&size=big"
 
 URL_GET_DEFAULT_COVER = API_BASE_URL + "assets/jacket/version.png"
 
