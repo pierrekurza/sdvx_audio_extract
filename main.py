@@ -4,6 +4,7 @@ import requests
 import re
 import subprocess
 import static_ffmpeg
+import music_tag
 from PIL import Image
 
 API_BASE_URL = "https://fairyjoke.net/api/games/sdvx/"
@@ -113,7 +114,7 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
 
     cover_path = get_music_cover_from_api(folder_number, diff_name, output_path)
     for music in list_of_files:
-        if not re.search("(_pre.s3v$)", music) and not re.search("(_fx.s3v$)", music):
+        if re.search("(^(?!.*pre|.*_\\d{1}i\\.s3v).*\\.s3v$)", music):
             music_path = music
     # Launch extract
     output_path_final = os.path.join(output_path, album_name, str(folder_number) + f"_{ascii_name}.mp3")
@@ -136,6 +137,50 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
         output_path_final
     ), shell=True)
     return process is not None
+
+
+def get_sub_folders_name(folder_name: str) -> list:
+    try:
+        elements = os.listdir(folder_name)
+    except FileNotFoundError:
+        print(f"The directory {folder_name} does't exist.")
+        return []
+    except PermissionError:
+        print(f"Not allowed to acces this directory {folder_name}.")
+        return []
+
+    sub_folder = [os.path.abspath(os.path.join(folder_name, element)) for element in elements if
+                     os.path.isdir(os.path.join(folder_name, element))]
+
+    return sub_folder
+
+
+def get_audio_files_list(folder_name: str) -> list:
+    pattern = os.path.join(folder_name, '*.mp3')
+    audio_files = glob.glob(pattern)
+
+    audio_files = [os.path.abspath(audio_file) for audio_file in audio_files]
+    return audio_files
+
+
+def get_metadatas(files_list: list) -> list:
+    audios_metadatas = []
+    for audio in files_list:
+        audio_file = music_tag.load_file(audio)
+        metadata = {
+            'title': audio_file['title']
+        }
+        audios_metadatas.append((audio, metadata))
+    return sorted(audios_metadatas, key=lambda x: str(x[1]['title']))
+
+
+def apply_metadata_sort_by_title_on_list(files_with_metadatas: list):
+    counter = 1
+    for file, metadata in files_with_metadatas:
+        current_audio = music_tag.load_file(file)
+        current_audio['tracknumber'] = counter
+        current_audio.save()
+        counter += 1
 
 
 def introduction_cli():
@@ -163,6 +208,13 @@ def clean_covers_folders_and_delete(covers_path: str):
         os.rmdir(os.path.join(covers_path, "covers"))
 
 
+def set_track_number_metadata(folders_list: list):
+    for folder in folders_list:
+        audios = get_audio_files_list(folder)
+        metadatas_list = get_metadatas(audios)
+        apply_metadata_sort_by_title_on_list(metadatas_list)
+
+
 def main():
     folder_number: int
     game_folder, extract_folder = introduction_cli()
@@ -179,7 +231,8 @@ def main():
                                         album_name, simple_name, max_diff)
         else:
             continue
-    clean_covers_folders_and_delete(extract_folder)
+    sub_folders = get_sub_folders_name(extract_folder)
+    set_track_number_metadata(sub_folders)
 
 
 if __name__ == '__main__':

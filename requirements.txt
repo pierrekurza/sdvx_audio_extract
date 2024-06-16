@@ -1,3 +1,4 @@
 requests
 Pillow
 static-ffmpeg
+music-tag
