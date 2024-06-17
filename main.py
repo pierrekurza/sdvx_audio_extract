@@ -143,14 +143,14 @@ def get_sub_folders_name(folder_name: str) -> list:
     try:
         elements = os.listdir(folder_name)
     except FileNotFoundError:
-        print(f"The directory {folder_name} does't exist.")
+        print(f"The directory {folder_name} doesn't exist.")
         return []
     except PermissionError:
-        print(f"Not allowed to acces this directory {folder_name}.")
+        print(f"Not allowed to access this directory {folder_name}.")
         return []
 
     sub_folder = [os.path.abspath(os.path.join(folder_name, element)) for element in elements if
-                     os.path.isdir(os.path.join(folder_name, element))]
+                  os.path.isdir(os.path.join(folder_name, element))]
 
     return sub_folder
 
@@ -227,7 +227,7 @@ def main():
         music_name, artist_name, album_artist, album_name, max_diff, simple_name = (
             get_music_info_from_api(folder_number))
         if music_name is not None:
-            convert_audio_and_move_file(folder, folder_number, extract_folder, music_name,artist_name,album_artist,
+            convert_audio_and_move_file(folder, folder_number, extract_folder, music_name, artist_name, album_artist,
                                         album_name, simple_name, max_diff)
         else:
             continue
