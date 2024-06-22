@@ -171,7 +171,7 @@ def get_metadatas(files_list: list) -> list:
             'title': audio_file['title']
         }
         audios_metadatas.append((audio, metadata))
-    return sorted(audios_metadatas, key=lambda x: str(x[1]['title']))
+    return sorted(audios_metadatas, key=lambda x: str(x[1]['title']).casefold())
 
 
 def apply_metadata_sort_by_title_on_list(files_with_metadatas: list):
@@ -227,7 +227,7 @@ def main():
         music_name, artist_name, album_artist, album_name, max_diff, simple_name = (
             get_music_info_from_api(folder_number))
         if music_name is not None:
-            convert_audio_and_move_file(folder, folder_number, extract_folder, music_name,artist_name,album_artist,
+            convert_audio_and_move_file(folder, folder_number, extract_folder, music_name, artist_name, album_artist,
                                         album_name, simple_name, max_diff)
         else:
             continue
