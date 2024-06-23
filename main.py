@@ -19,7 +19,17 @@ URL_GET_MUSIC_COVER = API_BASE_URL + "musics/{0}/{1}.png?fallback=game&size=big"
 
 URL_GET_DEFAULT_COVER = API_BASE_URL + "assets/jacket/version.png"
 
-DIFF_LIST = ["NOVICE", "ADVANCED", "EXHAUST", "MAXIMUM", "INFINITE", "GRAVITY", "HEAVENLY", "VIVID", "EXCEED"]
+DIFF_LIST = [
+    "NOVICE",
+    "ADVANCED",
+    "EXHAUST",
+    "MAXIMUM",
+    "INFINITE",
+    "GRAVITY",
+    "HEAVENLY",
+    "VIVID",
+    "EXCEED"
+]
 
 SDVX_NAME = "SOUND VOLTEX"
 
