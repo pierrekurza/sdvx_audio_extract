@@ -4,7 +4,6 @@ import requests
 import re
 import subprocess
 import static_ffmpeg
-import music_tag
 from PIL import Image
 import sorting
 
