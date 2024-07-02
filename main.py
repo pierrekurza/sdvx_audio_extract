@@ -192,6 +192,7 @@ def main():
             continue
     sub_folders = sorting.get_sub_folders_name(extract_folder)
     sorting.set_track_number_metadata(sub_folders)
+    print("Extract is now finished, please delete the 'covers' folder'")
 
 
 if __name__ == '__main__':
