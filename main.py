@@ -42,6 +42,11 @@ GAME_VERSIONS = {
 }
 
 
+UNICODE_FIXER = {
+    "蹙": "ℱ"
+}
+
+
 # Get all the folder inside the provided file path
 # Returns the list of all folders names inside the provided path
 def get_folders_name(sound_path: str):
@@ -70,7 +75,9 @@ def get_music_info_from_api(music_id: int):
     if response_api.status_code == 404 or response_api.status_code == 500:
         return None, None, None, None, None, None
     data = response_api.json()
-    music_name = data["title"]
+    music_name: str = data["title"]
+    for old_char, new_char in UNICODE_FIXER.items():
+        music_name = music_name.replace(old_char, new_char)
     artist_name = data["artist"]
     album_artist = "Various Artists"
     album_name = GAME_VERSIONS[data["version"]]
