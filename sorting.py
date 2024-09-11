@@ -40,9 +40,11 @@ def get_metadatas(files_list: list) -> list:
 
 def apply_metadata_sort_by_title_on_list(files_with_metadatas: list):
     counter = 1
+    number_of_tracks = len(files_with_metadatas) + 1
     for file, metadata in files_with_metadatas:
         current_audio = music_tag.load_file(file)
         current_audio['tracknumber'] = counter
+        current_audio['totaltracks'] = number_of_tracks
         current_audio.save()
         counter += 1
 
