@@ -42,6 +42,8 @@ GAME_VERSIONS = {
     7: "SOUND VOLTEX VII..."
 }
 
+SDVX_LOWEST_EG_SONG_ID = 1471
+
 
 UNICODE_FIXER = {
     "蹙": "ℱ"
@@ -160,7 +162,7 @@ def convert_audio_and_move_file(folder_path: str, folder_number: int, output_pat
 def introduction_cli():
     print("SDVX Songs Extraction Tool")
     while True:
-        game_folder = input("Please provide the SDVX game path > ")
+        game_folder: str = input("Please provide the SDVX game path > ")
         if (os.path.exists(game_folder) and "soundvoltex.dll" in os.listdir(game_folder + "\\modules")
                 or "soundvoltex.dll" in os.listdir(game_folder)):
             print("Ok, we can continue...")
@@ -168,9 +170,18 @@ def introduction_cli():
         else:
             print("soundvoltex.dll is not present...")
     while True:
-        extract_folder = input("Please provide the path where musics have to be extracted (the folder will be created "
+        print("Select menu for choosing which game to extract.")
+        print("Type '0' [zero] if you do no want this.")
+        begin_extract_game: int =  int(input("Choose which version you want to extract, should be 1: BOOTH, 2: INFINITE INFECTION, 3: GRAVITY WARS..., please type number only"))
+        if begin_extract_game == 0:
+            break
+        break
+    while True:
+        extract_folder: str = input("Please provide the path where musics have to be extracted (the folder will be created "
                                "if it doesn't exist) > ")
         break
+    if begin_extract_game is not None:
+        return game_folder, extract_folder, begin_extract_game
     return game_folder, extract_folder
 
 
@@ -184,7 +195,7 @@ def clean_covers_folders_and_delete(covers_path: str):
 
 def main():
     folder_number: int
-    game_folder, extract_folder = introduction_cli()
+    game_folder, extract_folder, begin_extract_game = introduction_cli()
     clean_covers_folders_and_delete(extract_folder)
     music_folder = os.path.join(game_folder, "data", "music")
     folders = get_folders_name(music_folder)
